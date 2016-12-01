@@ -4,8 +4,8 @@ var Board = (function() {
         bgColor = "#000",
         fgColor = "#555",
         lineColor = "#FFF",
-        level = "FIRST",
-        levels = ["FIRST", "SECOND"],
+        level = "THIRD",
+        levels = ["FIRST", "SECOND", "THIRD"],
         levelData = {},
         overTile = [],
         tiles = [],
@@ -48,10 +48,11 @@ var Board = (function() {
     }
 
     function nextLevel() {
-        if (level == "FIRST") {
-            level = "SECOND";
-        } else if (level == "SECOND") {
-            level = "FIRST";
+        var index = levels.indexOf(level) + 1;
+        if (index == levels.length) {
+            level = levels[0];
+        } else {
+            level = levels[index];
         }
 
         loadLevelData();
@@ -132,10 +133,27 @@ var Board = (function() {
     function drawObjects() {
         var lamps = objects["LAMPS"],
             bombs = objects["BOMBS"],
-            walls = objects["WALLS"];
+            walls = objects["WALLS"],
+            poweredLamps = laser.getPoweredLamps();
 
         for (var i=0; i < lamps.length; i++) {
-            drawImage("lamp0", lamps[i][0], lamps[i][1]);
+            var x = lamps[i][0],
+                y = lamps[i][1],
+                imgName = "";
+            
+            for (var j=0; j < poweredLamps.length; j++) {
+                if (poweredLamps[j][0] === x && poweredLamps[j][1] === y) {
+                    imgName = "lamp1";
+                    break;
+                }
+            }
+
+            if (imgName == "") {
+                imgName = "lamp0";
+            }
+
+            console.log("Lamp: (" + x + "; " + y + ") " + imgName);
+            drawImage(imgName, lamps[i][0], lamps[i][1]);
         }
 
         for (var i=0; i < bombs.length; i++) {

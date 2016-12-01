@@ -15,7 +15,7 @@ var LevelsManager = (function() {
 
         SECOND: {
             canvasSize: [598, 448],
-            gridSize: [14, 10],
+            gridSize: [14, 9],
             laserPosition: [13, 8],
             laserDirection: "left",
             mirrorsCount: 3,
@@ -27,6 +27,19 @@ var LevelsManager = (function() {
                         [0, 2], [1, 2], [2, 2], [3, 2], [12, 2], [13, 2],
                         [0, 3], [1, 3], [2, 3], [3, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3], [10, 3], [11, 3], [12, 3], [13, 3],
                         [0, 4], [1, 4], [2, 4], [3, 4], [5, 4], [6, 4], [7, 4], [8, 4], [9, 4], [10, 4], [11, 4], [12, 4], [13, 4]]
+            }
+        },
+
+        THIRD: {
+            canvasSize: [598, 448],
+            gridSize: [14, 9],
+            laserPosition: [6, 8],
+            laserDirection: "up",
+            mirrorsCount: 3,
+            objects: {
+                LAMPS: [[7, 2], [6, 3], [8, 3], [0, 4], [7, 4]],
+                BOMBS: [],
+                WALLS: []
             }
         }
     };

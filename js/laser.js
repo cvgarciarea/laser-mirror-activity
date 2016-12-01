@@ -28,13 +28,13 @@ var Laser = (function() {
         width = 5,
         utils = Utils,
         lampsCount = -1,
-        poweredLamps = 0,
+        poweredLamps = [],
         levelComplete = false,
         levelLosed = false;
 
     function draw(context) {
         direction = startDirection;
-        poweredLamps = 0;
+        poweredLamps = [];
 
         context.beginPath();
         context.strokeStyle = color;
@@ -77,8 +77,8 @@ var Laser = (function() {
         }
 
         if (utils.checkForLamp(objects["LAMPS"], x, y)) {
-            poweredLamps++;
-            if (lampsCount == poweredLamps) {
+            poweredLamps.push([x, y]);
+            if (lampsCount === poweredLamps.length) {
                 levelComplete = true;
                 return false;  // Level complete
             }
@@ -239,12 +239,17 @@ var Laser = (function() {
         levelLosed = losed;
     }
 
+    function getPoweredLamps() {
+        return poweredLamps;
+    }
+
     return {
         draw: draw,
         setTiles: setTiles,
         setData: setData,
         checkLevelComplete: checkLevelComplete,
         checkLevelLosed: checkLevelLosed,
-        setLevelLosed: setLevelLosed
+        setLevelLosed: setLevelLosed,
+        getPoweredLamps: getPoweredLamps
     }
 })();
