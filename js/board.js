@@ -7,8 +7,7 @@ var Board = (function() {
         fgColor = "#555",
         lineColor = "#FFF",
         overTile = [],
-        tiles = [],
-        drawLaser = false;
+        tiles = [];
 
     var board = document.getElementById("board-canvas");
     var context = board.getContext("2d");
@@ -35,10 +34,7 @@ var Board = (function() {
         drawGrid();
         drawOverTile();
         drawImageTiles();
-
-        //if (drawLaser) {
         laser.draw(context, tiles);
-        //}
     }
 
     function drawBackground() {
@@ -119,11 +115,6 @@ var Board = (function() {
 
         draw();
     };
-
-    document.getElementById("fire-button").onclick = function() {
-        drawLaser = true;
-        draw();
-    }
 
     return {
         init: init,
