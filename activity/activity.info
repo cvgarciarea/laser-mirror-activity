@@ -1,0 +1,7 @@
+[Activity]
+name = LaserMirror
+activity_version = 1
+bundle_id = org.sugarlabs.LaserMirror
+exec = sugar-activity-lasermirror
+icon = activity-lasermirror
+license = GPLv3
