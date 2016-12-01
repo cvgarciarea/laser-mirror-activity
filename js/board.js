@@ -81,6 +81,7 @@ var Board = (function() {
             drawOverTile();
             drawImageTiles();
             laser.draw(context, tiles);
+            drawGun();
             drawObjects();
         }
     }
@@ -130,6 +131,35 @@ var Board = (function() {
         }
     }
 
+    function drawGun() {
+        var data = levelManager.getLevelData(level),
+            angle = 0,
+            x = tileSize[0] * data["laserPosition"][0],
+            y = tileSize[1] * data["laserPosition"][1],
+            w = tileSize[0],
+            h = tileSize[1];
+
+        if (data["laserDirection"] == "up") {
+            angle = 90;
+        } else if (data["laserDirection"] == "down") {
+            angle = 270;
+        } else if (data["laserDirection"] == "right") {
+            angle = 180;
+        } else if (data["laserDirection"] == "left") {
+            angle = 0;
+        }
+
+        context.save();
+        context.translate(x + w / 2, y + h / 2);
+        context.rotate(angle * Math.PI / 180);
+
+        img = new Image();
+        img.src = "img/gun.png";
+        context.drawImage(img, -w/2, -h/2 + 3, w, h);
+
+        context.restore();
+    }
+
     function drawObjects() {
         var lamps = objects["LAMPS"],
             bombs = objects["BOMBS"],
@@ -152,7 +182,6 @@ var Board = (function() {
                 imgName = "lamp0";
             }
 
-            console.log("Lamp: (" + x + "; " + y + ") " + imgName);
             drawImage(imgName, lamps[i][0], lamps[i][1]);
         }
 
@@ -172,11 +201,29 @@ var Board = (function() {
     }
 
     board.addEventListener("click", function(event) {
+        var data = levelManager.getLevelData(level);
         var row = overTile[0],
             column = overTile[1];
 
         if (utils.checkForObject(objects, overTile[0], overTile[1])) {
             return;  // If exists a object on here, don't make mirrors
+        }
+
+        if (overTile[0] == data["laserPosition"][0] && overTile[1] == data["laserPosition"][1]) {
+            return;  // Evit make a mirror on gun place
+        }
+
+        var mirrors = 0;
+        for (var x=0; x < gridSize[0]; x++) {
+            for (var y=0; y < gridSize[1]; y++) {
+                if (tiles[x][y] != 0) {
+                    mirrors++;
+                }
+            }
+        }
+
+        if (mirrors >= data["mirrorsCount"] && tiles[row][column] == 0) {
+            return;  // Limit mirrors
         }
 
         tiles[row][column] = tiles[row][column] + 1;
