@@ -1,40 +1,87 @@
 var Board = (function() {
-    var xSize = 11,
-        ySize = 11,
-        tileWidth = 0,
-        tileHeight = 0,
-        bgColor = "#333",
+    var gridSize = [-1, -1],
+        tileSize = [-1, -1],
+        bgColor = "#000",
         fgColor = "#555",
         lineColor = "#FFF",
+        level = "FIRST",
+        levels = ["FIRST", "SECOND"],
+        levelData = {},
         overTile = [],
-        tiles = [];
+        tiles = [],
+        objects = {},
+        showingDialog = false;
 
+    var levelManager = LevelsManager;
     var board = document.getElementById("board-canvas");
     var context = board.getContext("2d");
     var laser = Laser;
+    var utils = Utils;
 
     function init() {
-        tileWidth = board.width / xSize;
-        tileHeight = board.height / ySize;
+        loadLevelData();
+        draw();
+    }
+
+    function loadLevelData() {
+        var data = levelManager.getLevelData(level);
+        board.width = data["canvasSize"][0];
+        board.height = data["canvasSize"][1];
+
+        objects = data["objects"];
+
+        gridSize = data["gridSize"];
+        var laserPosition = data["laserPosition"],
+            laserDirection = data["laserDirection"];
+
+        tileSize[0] = board.width / gridSize[0];
+        tileSize[1] = board.height / gridSize[1];
         tiles = [];
-        for (var x = 0; x < xSize; x++) {
+        for (var x = 0; x < gridSize[0]; x++) {
             tiles[x] = [];
-            for (var y = 0; y < ySize; y++) {
+            for (var y = 0; y < gridSize[1]; y++) {
                 tiles[x][y] = 0;
             }
         }
 
-        laser.setTiles(tiles);
-        laser.setGridSize(xSize, ySize, tileWidth, tileHeight);
-        draw();
+        laser.setData(gridSize, tileSize, tiles, laserPosition, laserDirection, objects, objects["LAMPS"].length);
+    }
+
+    function nextLevel() {
+        if (level == "FIRST") {
+            level = "SECOND";
+        } else if (level == "SECOND") {
+            level = "FIRST";
+        }
+
+        loadLevelData();
+    }
+
+    function setLevel(_level) {
+        level = _level;
+        loadLevelData();
     }
 
     function draw() {
+        if (laser.checkLevelComplete()) {
+            document.getElementById("complete-dialog").style.display = "block";
+            showingDialog = true;
+        }
+
+        if (laser.checkLevelLosed()) {
+            document.getElementById("losed-dialog").style.display = "block";
+            showingDialog = true;
+        }
+
         drawBackground();
-        drawGrid();
-        drawOverTile();
-        drawImageTiles();
-        laser.draw(context, tiles);
+
+        if (!showingDialog) {
+            drawGrid();
+            drawOverTile();
+            drawImageTiles();
+            laser.draw(context, tiles);
+            drawObjects();
+        }
     }
 
     function drawBackground() {
@@ -48,14 +95,14 @@ var Board = (function() {
         context.lineWidth = 2;
         context.strokeStyle = lineColor;
 
-        for (var i = 1; i < xSize; i++) {
-            context.moveTo(tileWidth * i, 0);
-            context.lineTo(tileWidth * i, board.height);
+        for (var i=1; i < gridSize[0]; i++) {
+            context.moveTo(tileSize[0] * i, 0);
+            context.lineTo(tileSize[0] * i, board.height);
         }
 
-        for (var i = 1; i < ySize; i++) {
-            context.moveTo(0, tileHeight * i);
-            context.lineTo(board.width, tileHeight * i);
+        for (var i=1; i < gridSize[1]; i++) {
+            context.moveTo(0, tileSize[1] * i);
+            context.lineTo(board.width, tileSize[1] * i);
         }
 
         context.stroke();
@@ -67,28 +114,52 @@ var Board = (function() {
                 y = overTile[1];
 
             context.fillStyle = fgColor;
-            context.fillRect(tileWidth * x - 1, tileHeight * y - 1, tileWidth + 2, tileHeight + 2);
+            context.fillRect(tileSize[0] * x - 1, tileSize[1] * y - 1, tileSize[0] + 2, tileSize[1] + 2);
             context.fill();
         }
     }
 
     function drawImageTiles() {
-        for (var x = 0; x < xSize; x++) {
-            for (var y = 0; y < ySize; y++) {
+        for (var x = 0; x < gridSize[0]; x++) {
+            for (var y = 0; y < gridSize[1]; y++) {
                 if (tiles[x][y] !== 0) {
-                    img = new Image();
-                    img.src = "img/mirror" + tiles[x][y] + ".png";
-                    context.drawImage(img, tileWidth * x, tileHeight * y, tileWidth, tileHeight);
+                    drawImage("mirror" + tiles[x][y], x, y);
                 }
             }
         }
     }
 
-    board.addEventListener("click", function(event) {
-        drawLaser = false;
+    function drawObjects() {
+        var lamps = objects["LAMPS"],
+            bombs = objects["BOMBS"],
+            walls = objects["WALLS"];
 
+        for (var i=0; i < lamps.length; i++) {
+            drawImage("lamp0", lamps[i][0], lamps[i][1]);
+        }
+
+        for (var i=0; i < bombs.length; i++) {
+            drawImage("bomb", bombs[i][0], bombs[i][1]);
+        }
+
+        for (var i=0; i < walls.length; i++) {
+            drawImage("wall", walls[i][0], walls[i][1]);
+        }
+    }
+
+    function drawImage(imageName, x, y) {
+        img = new Image();
+        img.src = "img/" + imageName + ".png";
+        context.drawImage(img, tileSize[0] * x, tileSize[1] * y, tileSize[0], tileSize[1]);
+    }
+
+    board.addEventListener("click", function(event) {
         var row = overTile[0],
             column = overTile[1];
+
+        if (utils.checkForObject(objects, overTile[0], overTile[1])) {
+            return;  // If exists a object on here, don't make mirrors
+        }
 
         tiles[row][column] = tiles[row][column] + 1;
         if (tiles[row][column] === 5) {
@@ -100,10 +171,22 @@ var Board = (function() {
     }, false);
 
     board.addEventListener("mousemove", function(event) {
-        overTile[0] = parseInt(event.offsetX / tileWidth);
-        overTile[1] = parseInt(event.offsetY / tileHeight);
+        overTile[0] = parseInt(event.offsetX / tileSize[0]);
+        overTile[1] = parseInt(event.offsetY / tileSize[1]);
         draw();
     }, false);
+
+    document.getElementById("complete-button").onclick = function() {
+        this.parentNode.style.display = "none";
+        showingDialog = false;
+        nextLevel();
+    };
+
+    document.getElementById("retry-button").onclick = function() {
+        this.parentNode.style.display = "none";
+        showingDialog = false;
+        setLevel(level);  // Reset
+    };
 
     document.getElementById("clear-button").onclick = function() {
         drawLaser = false;

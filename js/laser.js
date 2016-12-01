@@ -15,18 +15,26 @@ var Laser = (function() {
         UP_LEFT: 4
     }
 
-    var direction = dirType.RIGHT,
+    var direction = dirType.UP,
+        startDirection = dirType.UP,
         startPosition = [0, 0],
         currentPosition = [0, 0],
         nextPosition = [0, 0],
         gridSize = [0, 0],
         tileSize = [0, 0],
         tiles = [],
+        objects = {},
         color = "#F00",
-        width = 5;
+        width = 5,
+        utils = Utils,
+        lampsCount = -1,
+        poweredLamps = 0,
+        levelComplete = false,
+        levelLosed = false;
 
     function draw(context) {
-        direction = dirType.RIGHT;
+        direction = startDirection;
+        poweredLamps = 0;
 
         context.beginPath();
         context.strokeStyle = color;
@@ -58,6 +66,23 @@ var Laser = (function() {
             mirror = -1,
             nextX = -2,
             nextY = -2;
+
+        if (utils.checkForWall(objects["WALLS"], x, y)) {
+            return false;
+        }
+
+        if (utils.checkForBomb(objects["BOMBS"], x, y)) {
+            levelLosed = true;
+            return false;
+        }
+
+        if (utils.checkForLamp(objects["LAMPS"], x, y)) {
+            poweredLamps++;
+            if (lampsCount == poweredLamps) {
+                levelComplete = true;
+                return false;  // Level complete
+            }
+        }
 
         if (x >= 0 && y >= 0 && x < gridSize[0] && y < gridSize[1]) {
             if (tiles[x][y] !== 0) {
@@ -136,6 +161,7 @@ var Laser = (function() {
 
             nextPosition[0] = nextX;
             nextPosition[1] = nextY;
+
             return true;
         }
 
@@ -143,7 +169,15 @@ var Laser = (function() {
     }
 
     function drawFirstLine(context) {
-        drawLine(context, -1, startPosition[1], 0, startPosition[1]);
+        if (startDirection === dirType.UP) {
+            drawLine(context, startPosition[0], startPosition[1], startPosition[0], startPosition[1] - 1);
+        } else if (startDirection === dirType.DOWN) {
+            drawLine(context, startPosition[0], startPosition[1], startPosition[0], startPosition[1] + 1);
+        } else if (startDirection === dirType.RIGHT) {
+            drawLine(context, startPosition[0], startPosition[1], startPosition[0] + 1, startPosition[1]);
+        } else if (startDirection === dirType.LEFT) {
+            drawLine(context, startPosition[0], startPosition[1], startPosition[0] - 1, startPosition[1]);
+        }
     }
 
     function drawLine(context, fx, fy, tx, ty) {
@@ -159,18 +193,58 @@ var Laser = (function() {
         context.lineTo(x2, y2);
     }
 
-    function setGridSize(xSize, ySize, tileWidth, tileHeight) {
-        gridSize[0] = xSize;
-        gridSize[1] = ySize;
-        tileSize[0] = tileWidth;
-        tileSize[1] = tileHeight;
+    function setData(_gridSize, _tileSize, _tiles, _laserPosition, _laserDirection, _objects, _lampsCount) {
+        levelComplete = false;
+        levelLosed = false;
 
-        startPosition[1] = Math.round(ySize / 2) - 1;
+        gridSize = _gridSize;
+        tileSize = _tileSize;
+        tiles = _tiles;
+        objects = _objects;
+        startPosition = _laserPosition;
+        startDirection = translateDirection(_laserDirection);
+        direction = startDirection,
+        lampsCount = _lampsCount;
+    }
+
+    function translateDirection(strDirection) {
+        var _direction;
+
+        if (strDirection == "up") {
+            _direction = dirType.UP;
+        } else if (strDirection == "down") {
+            _direction = dirType.DOWN;
+        } else if (strDirection == "right") {
+            _direction = dirType.RIGHT;
+        } else if (strDirection == "left") {
+            _direction = dirType.LEFT;
+        }
+
+        return _direction;
+    }
+
+    function checkLevelComplete() {
+        return levelComplete;
+    }
+
+    function setLevelComplete(complete) {
+        levelComplete = complete;
+    }
+
+    function checkLevelLosed() {
+        return levelLosed;
+    }
+
+    function setLevelLosed(losed) {
+        levelLosed = losed;
     }
 
     return {
         draw: draw,
         setTiles: setTiles,
-        setGridSize: setGridSize
+        setData: setData,
+        checkLevelComplete: checkLevelComplete,
+        checkLevelLosed: checkLevelLosed,
+        setLevelLosed: setLevelLosed
     }
 })();

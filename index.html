@@ -16,10 +16,23 @@
       <button class="toolbutton" id="clear-button" title="Clear board"></button>
       <button class="toolbutton pull-right" id="stop-button" title="Stop"></button>
     </div>
+
+    <div class="dialog" id="complete-dialog">
+        <h1>Level complete!</h1>
+        <button type="button" id="complete-button">Next level</button>
+    </div>
+
+    <div class="dialog" id="losed-dialog">
+        <h1>You lose</h1>
+        <button type="button" id="retry-button">Try again</button>
+    </div>
+    
     <div id="canvas">
         <canvas id="board-canvas" width="560" height="500"></canvas>
     </div>
 
+    <script src="js/utils.js"></script>
+    <script src="js/levels.js"></script>
     <script src="js/laser.js"></script>
     <script src="js/board.js"></script>
     <script src="js/main.js"></script>
