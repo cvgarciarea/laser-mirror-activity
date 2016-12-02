@@ -1,25 +1,45 @@
 var Laser = (function() {
+    var mirrorStyle = {
+        NULL: 0,
+        NORMAL: 1,
+        TRIANGLE: 2
+    }
 
     var dirType = {
-        UP: 0,
-        DOWN: 1,
-        RIGHT: 2,
-        LEFT: 3
+        UP_RIGHT: 0,
+        UP: 1,
+        UP_LEFT: 2,
+        LEFT: 3,
+        DOWN_LEFT: 4,
+        DOWN: 5,
+        DOWN_RIGHT: 6,
+        RIGHT: 7,
     }
 
     var mirrorType = {  // Where the mirror are pointing
-        NULL: 0,
-        UP_RIGHT: 1,
-        DOWN_RIGHT: 2,
-        DOWN_LEFT: 3,
-        UP_LEFT: 4
+        NORMAL: {
+            UP_RIGHT: 1,
+            RIGHT: 2,
+            DOWN_RIGHT: 3,
+            DOWN: 4,
+            DOWN_LEFT: 5,
+            LEFT: 6,
+            UP_LEFT: 7,
+            UP: 8
+        },
+        TRIANGLE: {
+            UP_RIGHT: 1,
+            DOWN_RIGHT: 2,
+            DOWN_LEFT: 3,
+            UP_LEFT: 4
+        }
     }
 
     var direction = dirType.UP,
         startDirection = dirType.UP,
         startPosition = [0, 0],
         currentPosition = [0, 0],
-        nextPosition = [0, 0],
+        nextPosition = [[-3, -3], [-3, -3]],
         gridSize = [0, 0],
         tileSize = [0, 0],
         tiles = [],
@@ -30,26 +50,53 @@ var Laser = (function() {
         lampsCount = -1,
         poweredLamps = [],
         levelComplete = false,
-        levelLosed = false;
+        levelLosed = false,
+        movements = [];  // [direction, x, y]
 
-    function draw(context) {
+    var context = document.getElementById("board-canvas").getContext("2d");
+
+    function draw() {
         direction = startDirection;
         poweredLamps = [];
+        movements = getNextMovement(startDirection, startPosition[0], startPosition[1]);
 
         context.beginPath();
         context.strokeStyle = color;
         context.lineWidth = width;
-        context.lineCap = "round"
+        context.lineCap = "round";
 
-        drawFirstLine(context);
+        drawFirstLine();
 
-        var nextPosible = true;
-
-        while (nextPosible) {
-            nextPosible = nextMovementIsPosible();
-            if (nextPosible) {
-                drawLine(context, currentPosition[0], currentPosition[1], nextPosition[0], nextPosition[1]);
+        while (true) {
+            if (movements == [[-3, -3]]) {
+                break;
             }
+
+            var x = movements[0][1],
+                y = movements[0][2];
+
+            movements[0] = getNextMovement(movements[0][0], movements[0][1], movements[0][2])[0];
+
+            //for (var i=0; i < data.length; i++) {
+            if (!inScreen(movements[0][1], movements[0][2])) {
+                break;
+            }
+
+            drawLine(x, y, movements[0][1], movements[0][2]);
+            //}
+
+
+            //nextMovementIsPosible();
+            /*if (nextPosible) {
+                drawLine(currentPosition[0], currentPosition[1], nextPosition[0][0], nextPosition[0][1]);
+
+                if (nextPosition[1] != [-3, -3]) {
+                    var x = currentPosition[0],
+                        y = currentPosition[1];
+                    
+                    drawLine
+                }
+            }*/
         }
 
         context.stroke();
@@ -59,130 +106,268 @@ var Laser = (function() {
         tiles = tilesGrid;
     }
 
-    function nextMovementIsPosible() {
-        var x = currentPosition[0],
-            y = currentPosition[1],
-            onMirror = false,
+    function getNextMovement(dir, x, y) {
+        var onMirror = false,
             mirror = -1,
-            nextX = -2,
-            nextY = -2;
+            mStyle = mirrorStyle.NULL,
+            nextX = x,
+            nextY = y,
+            dire = -1;
 
         if (utils.checkForWall(objects["WALLS"], x, y)) {
-            return false;
+            return [[-3, -3, -3]];
         }
 
         if (utils.checkForBomb(objects["BOMBS"], x, y)) {
             levelLosed = true;
-            return false;
+            return [[-3, -3, -3]];
         }
 
         if (utils.checkForLamp(objects["LAMPS"], x, y)) {
             poweredLamps.push([x, y]);
-            if (lampsCount === poweredLamps.length) {
+            if (lampsCount == poweredLamps.length) {
                 levelComplete = true;
-                return false;  // Level complete
+                return [[-3, -3, -3]];  // Level complete
             }
         }
 
         if (x >= 0 && y >= 0 && x < gridSize[0] && y < gridSize[1]) {
-            if (tiles[x][y] !== 0) {
+            if (tiles[x][y][0] != mirrorStyle.NULL) {
                 onMirror = true;
-                mirror = tiles[x][y];
+                mStyle = tiles[x][y][0];
+                mirror = tiles[x][y][1];
             }
         }
         
         if (!onMirror) {
-            if (direction === dirType.UP) {
-                nextPosition[0] = x;
-                nextPosition[1] = y - 1;
-            } else if (direction === dirType.DOWN) {
-                nextPosition[0] = x;
-                nextPosition[1] = y + 1;
-            } else if (direction === dirType.RIGHT) {
-                nextPosition[0] = x + 1;
-                nextPosition[1] = y;
-            } else if (direction === dirType.LEFT) {
-                nextPosition[0] = x - 1;
-                nextPosition[1] = y;
+            if (dir == dirType.UP_RIGHT) {
+                nextX = x + 1;
+                nextY = y - 1;
+
+            } else if (dir == dirType.UP) {
+                nextY = y - 1;
+            
+            } else if (dir == dirType.UP_LEFT) {
+                nextX = x - 1;
+                nextY = y - 1;
+            
+            } else if (dir == dirType.LEFT) {
+                nextX = x - 1;
+
+            } else if (dir == dirType.DOWN_LEFT) {
+                nextX = x - 1;
+                nextY = y + 1;
+
+            } else if (dir == dirType.DOWN) {
+                nextY = y + 1;
+
+            } else if (dir == dirType.DOWN_RIGHT) {
+                nextX = x + 1;
+                nextY = y + 1;
+
+            } else if (dir == dirType.RIGHT) {
+                nextX = x + 1;
             }
 
-            return (nextPosition[0] >= -1 && nextPosition[1] >= -1 &&
-                    nextPosition[0] <= gridSize[0] + 1 && nextPosition[1] <= gridSize[1] + 1);
-        
+            return [[dir, nextX, nextY]];
+
         } else if (onMirror) {
-            if (direction === dirType.UP) {
-                nextY = y;
-                if (mirror === mirrorType.UP_RIGHT || mirror === mirrorType.UP_LEFT) {
-                    return false;
-                } else if (mirror === mirrorType.DOWN_RIGHT) {
-                    nextX = x + 1;
-                    direction = dirType.RIGHT;
-                } else if (mirror === mirrorType.DOWN_LEFT) {
-                    nextX = x - 1;
-                    direction = dirType.LEFT;
+            if (mStyle == mirrorStyle.NORMAL) {
+                if (dir == dirType.UP_RIGHT) {
+                    if (mirror == mirrorType.NORMAL.DOWN) {
+                        nextX = x + 1;
+                        nextY = y + 1;
+                        dir = dirType.DOWN_RIGHT;
+                    } else if (mirror == mirrorType.NORMAL.LEFT) {
+                        nextX = x - 1;
+                        nextY = y - 1;
+                        dir = dirType.UP_LEFT;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
+
+                } else if (dir == dirType.UP) {
+                    if (mirror == mirrorType.NORMAL.DOWN_RIGHT) {
+                        nextX = x + 1;
+                        dir = dirType.RIGHT;
+                    } else if (mirror == mirrorType.NORMAL.DOWN_LEFT) {
+                        nextX = x - 1;
+                        dir = dirType.LEFT;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
+
+                } else if (dir == dirType.UP_LEFT) {
+                    if (mirror == mirrorType.NORMAL.DOWN) {
+                        nextX = x - 1;
+                        nextY = y + 1;
+                        dir = dirType.DOWN_LEFT;
+                    } else if (mirror == mirrorType.NORMAL.RIGHT) {
+                        nextX = x + 1;
+                        nextY = y - 1;
+                        dir = dirType.UP_RIGHT;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
+
+                } else if (dir == dirType.LEFT) {
+                    if (mirror == mirrorType.NORMAL.UP_RIGHT) {
+                        nextY = y - 1;
+                        dir = dirType.UP;
+                    } else if (mirror == mirrorType.NORMAL.DOWN_RIGHT) {
+                        nextY = y + 1;
+                        dir = dirType.DOWN;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
+
+                } else if (dir == dirType.DOWN_LEFT) {
+                    if (mirror == mirrorType.NORMAL.UP) {
+                        nextX = x - 1;
+                        nextY = y - 1;
+                        dir = dirType.UP_LEFT;
+                    } else if (mirror == mirrorType.NORMAL.RIGHT) {
+                        nextX = x + 1;
+                        nextY = y + 1;
+                        dir = dirType.DOWN_RIGHT;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
+
+                } else if (dir == dirType.DOWN) {
+                    if (mirror == mirrorType.NORMAL.UP_RIGHT) {
+                        nextX = x + 1;
+                        dir = dirType.RIGHT;
+                    } else if (mirror == mirrorType.NORMAL.UP_LEFT) {
+                        nextX = x - 1;
+                        dir = dirType.LEFT;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
+
+                } else if (dir == dirType.DOWN_RIGHT) {
+                    if (mirror == mirrorType.NORMAL.UP) {
+                        nextX = x + 1;
+                        nextY = y - 1;
+                        dir = dirType.UP_RIGHT;
+                    } else if (mirror == mirrorType.NORMAL.LEFT) {
+                        nextX = x - 1;
+                        nextY = y + 1;
+                        dir = dirType.DOWN_LEFT;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
+
+                } else if (dir == dirType.RIGHT) {
+                    if (mirror == mirrorType.NORMAL.UP_LEFT) {
+                        nextY = y - 1;
+                        dir = dirType.UP;
+                    } else if (mirror == mirrorType.NORMAL.DOWN_LEFT) {
+                        nextY = y + 1;
+                        dir = dirType.DOWN;
+                    } else {
+                        return [[-3, -3, -3]];
+                    }
                 }
 
-            } else if (direction === dirType.DOWN) {
-                nextY = y;
-                if (mirror === mirrorType.DOWN_RIGHT || mirror === mirrorType.DOWN_LEFT) {
-                    return false;
-                } else if (mirror === mirrorType.UP_RIGHT) {
-                    nextX = x + 1;
-                    direction = dirType.RIGHT;
-                } else if (mirror === mirrorType.UP_LEFT) {
-                    nextX = x - 1;
-                    direction = dirType.LEFT;
+                return [[dir, nextX, nextY]];
+
+            } else if (mStyle == mirrorStyle.TRIANGLE) {
+                // Cómo sigo dos rayos láser por separado?
+                var rays = [[-3, -3, -3], [-3, -3, -3]];
+
+                if (dir == dirType.UP_RIGHT) {
+                    if (mirror == mirrorType.TRIANGLE.DOWN_LEFT) {
+                        rays[0][0] = dirType.UP_LEFT;
+                        rays[0][1] = x - 1;
+                        rays[0][2] = y - 1;
+
+                        rays[1][0] = dirType.DOWN_RIGHT;
+                        rays[1][1] = x + 1;
+                        rays[1][2] = y + 1;
+                    }
+                } else if (dir == dirType.UP_LEFT) {
+                    if (mirror == mirrorType.TRIANGLE.DOWN_RIGHT) {
+                        nextX = x + 1;
+                        nextY = y - 1;
+                        dir = dirType.UP_RIGHT;
+                        rays[0][0] = dirType.UP_RIGHT;
+                        rays[0][1] = x + 1;
+                        rays[0][2] = y - 1;
+
+                        rays[1][0] = dirType.DOWN_LEFT;
+                        rays[1][1] = x - 1;
+                        rays[1][2] = y + 1;
+                    }
+                } else if (dir == dirType.DOWN_LEFT) {
+                    if (mirror == mirrorType.TRIANGLE.UP_RIGHT) {
+                        nextX = x - 1;
+                        nextY = y - 1;
+                        dir = dirType.UP_LEFT;
+                        rays[0][0] = dirType.UP_LEFT;
+                        rays[0][1] = x - 1;
+                        rays[0][2] = y - 1;
+
+                        rays[1][0] = dirType.DOWN_RIGHT;
+                        rays[1][1] = x + 1;
+                        rays[1][2] = y + 1;
+                    }
+                } else if (dir == dirType.DOWN_RIGHT) {
+                    if (mirror == mirrorType.TRIANGLE.UP_LEFT) {
+                        // TODO: follow all directions
+                        nextX = x + 1;
+                        nextY = y - 1;
+                        dir = dirType.UP_RIGHT;
+                        rays[0][0] = dirType.UP_RIGHT;
+                        rays[0][1] = x + 1;
+                        rays[0][2] = y - 1;
+
+                        rays[1][0] = dirType.DOWN_LEFT;
+                        rays[1][1] = x - 1;
+                        tays[1][2] = y + 1;
+                    }
                 }
 
-            } else if (direction === dirType.RIGHT) {
-                nextX = x;
-                if (mirror === mirrorType.UP_RIGHT || mirror === mirrorType.DOWN_RIGHT) {
-                    return false;
-                } else if (mirror === mirrorType.UP_LEFT) {
-                    nextY = y - 1;
-                    direction = dirType.UP;
-                } else if (mirror === mirrorType.DOWN_LEFT) {
-                    nextY = y + 1;
-                    direction = dirType.DOWN;
-                }
-
-            } else if (direction === dirType.LEFT) {
-                nextX = x;
-                if (mirror === mirrorType.UP_LEFT || mirror === mirrorType.DOWN_LEFT) {
-                    return false;
-                } else if (mirror === mirrorType.UP_RIGHT) {
-                    nextY = y - 1;
-                    direction = dirType.UP;
-                } else if (mirror === mirrorType.DOWN_RIGHT) {
-                    nextY = y + 1;
-                    direction = dirType.DOWN;
-                }
+                return rays;
             }
-
-            nextPosition[0] = nextX;
-            nextPosition[1] = nextY;
-
-            return true;
         }
 
-        return false;
+        return [[-3, -3, -3]];
     }
 
-    function drawFirstLine(context) {
-        if (startDirection === dirType.UP) {
-            drawLine(context, startPosition[0], startPosition[1], startPosition[0], startPosition[1] - 1);
-        } else if (startDirection === dirType.DOWN) {
-            drawLine(context, startPosition[0], startPosition[1], startPosition[0], startPosition[1] + 1);
-        } else if (startDirection === dirType.RIGHT) {
-            drawLine(context, startPosition[0], startPosition[1], startPosition[0] + 1, startPosition[1]);
-        } else if (startDirection === dirType.LEFT) {
-            drawLine(context, startPosition[0], startPosition[1], startPosition[0] - 1, startPosition[1]);
+    function drawFirstLine() {
+        var x = startPosition[0],
+            y = startPosition[1];
+
+        if (direction == dirType.UP_RIGHT) {
+            drawLine(x, y, x + 1, y - 1);
+
+        } else if (direction == dirType.UP) {
+            drawLine(x, y, x, y - 1);
+
+        } else if (direction == dirType.UP_LEFT) {
+            drawLine(x, y, x - 1, y - 1);
+
+        } else if (direction == dirType.LEFT) {
+            drawLine(x, y, x - 1, y);
+
+        } else if (direction == dirType.DOWN_LEFT) {
+            drawLine(x, y, x - 1, y + 1);
+
+        } else if (direction == dirType.DOWN) {
+            drawLine(x, y, x, y + 1);
+
+        } else if (direction == dirType.DOWN_RIGHT) {
+            drawLine(x, y, x + 1, y + 1);
+
+        } else if (direction == dirType.RIGHT) {
+            drawLine(x, y, x + 1, y);
         }
     }
 
-    function drawLine(context, fx, fy, tx, ty) {
-        currentPosition[0] = tx;
-        currentPosition[1] = ty;
+    function drawLine(fx, fy, tx, ty) {
+        movements[0][1] = tx;
+        movements[0][2] = ty;
 
         var x1 = fx * tileSize[0] + tileSize[0] / 2,
             y1 = (fy + 1) * tileSize[1] - tileSize[1] / 2,
@@ -210,17 +395,29 @@ var Laser = (function() {
     function translateDirection(strDirection) {
         var _direction;
 
-        if (strDirection == "up") {
+        if (strDirection == "up-right") {
+            _direction = dirType.UP_RIGHT;
+        } else if (strDirection == "up") {
             _direction = dirType.UP;
-        } else if (strDirection == "down") {
-            _direction = dirType.DOWN;
-        } else if (strDirection == "right") {
-            _direction = dirType.RIGHT;
+        } else if (strDirection == "up-left") {
+            _direction = dirType.UP_LEFT;
         } else if (strDirection == "left") {
             _direction = dirType.LEFT;
+        } else if (strDirection == "down-left") {
+            _direction = dirType.DOWN_LEFT;
+        } else if (strDirection == "down") {
+            _direction = dirType.DOWN;
+        } else if (strDirection == "down-right") {
+            _direction = dirType.DOWN_RIGHT;
+        } else if (strDirection == "right") {
+            _direction = dirType.RIGHT;
         }
 
         return _direction;
+    }
+
+    function inScreen(x, y) {
+        return (x >= -1 && y >= -1 && x <= gridSize[0] + 1 && y <= gridSize[1] + 1);
     }
 
     function checkLevelComplete() {

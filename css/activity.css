@@ -7,20 +7,16 @@
   background-image: url(../activity/activity-lasermirror.svg);
 }
 
-#clear-button {
-  background-image: url(../img/clear-board.svg);
-}
-
 #mirrors-count-button {
   background-image: url(../img/mirror1.png);
 }
 
-#prev-bt {
-  background-image: url(../icons/go-previous-paired.svg);
+#triangles-count-button {
+  background-image: url(../img/triangle1.png);
 }
 
-#next-bt {
-  background-image: url(../icons/go-next-paired.svg);
+#clear-button {
+  background-image: url(../img/clear-board.svg);
 }
 
 #canvas {

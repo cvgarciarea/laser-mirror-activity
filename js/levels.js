@@ -5,7 +5,10 @@ var LevelsManager = (function() {
             gridSize: [14, 9],
             laserPosition: [6, 8],
             laserDirection: "up",
-            mirrorsCount: 1,
+            mirrorsCount: {
+                NORMAL: 1,
+                TRIANGLE: 0
+            },
             objects: {
                 LAMPS: [[13, 4]],
                 BOMBS: [],
@@ -18,7 +21,10 @@ var LevelsManager = (function() {
             gridSize: [14, 9],
             laserPosition: [13, 8],
             laserDirection: "left",
-            mirrorsCount: 3,
+            mirrorsCount: {
+                NORMAL: 3,
+                TRIANGLE: 0
+            },
             objects: {
                 LAMPS: [[10, 0]],
                 BOMBS: [[4, 1], [11, 2]],
@@ -35,11 +41,30 @@ var LevelsManager = (function() {
             gridSize: [14, 9],
             laserPosition: [6, 8],
             laserDirection: "up",
-            mirrorsCount: 3,
+            mirrorsCount: {
+                NORMAL: 3,
+                TRIANGLE: 0
+            },
             objects: {
                 LAMPS: [[7, 2], [6, 3], [8, 3], [0, 4], [7, 4]],
                 BOMBS: [],
                 WALLS: []
+            }
+        },
+
+        FOURTH: {
+            canvasSize: [598, 448],
+            gridSize: [14, 10],
+            laserPosition: [3, 9],
+            laserDirection: "up-right",
+            mirrorsCount: {
+                NORMAL: 0,
+                TRIANGLE: 3
+            },
+            objects: {
+                LAMPS: [[2, 0], [10, 0], [8, 2], [5, 3], [9, 5], [8, 6], [11, 9], [13, 9]],
+                BOMBS: [],
+                WALLS: [[7, 4]]
             }
         }
     };

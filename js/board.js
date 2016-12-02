@@ -1,16 +1,23 @@
 var Board = (function() {
+    var mirrorStyle = {
+        NULL: 0,
+        NORMAL: 1,
+        TRIANGLE: 2
+    }
+
     var gridSize = [-1, -1],
         tileSize = [-1, -1],
         bgColor = "#000",
         fgColor = "#555",
         lineColor = "#FFF",
-        level = "THIRD",
-        levels = ["FIRST", "SECOND", "THIRD"],
+        level = "FIRST",
+        levels = ["FIRST", "SECOND", "THIRD", "FOURTH"],
         levelData = {},
         overTile = [],
         tiles = [],
         objects = {},
-        showingDialog = false;
+        showingDialog = false,
+        selectedMirrorStyle = mirrorStyle.NORMAL;
 
     var levelManager = LevelsManager;
     var board = document.getElementById("board-canvas");
@@ -40,7 +47,7 @@ var Board = (function() {
         for (var x = 0; x < gridSize[0]; x++) {
             tiles[x] = [];
             for (var y = 0; y < gridSize[1]; y++) {
-                tiles[x][y] = 0;
+                tiles[x][y] = [mirrorStyle.NULL, 0];
             }
         }
 
@@ -79,8 +86,8 @@ var Board = (function() {
         if (!showingDialog) {
             drawGrid();
             drawOverTile();
-            drawImageTiles();
-            laser.draw(context, tiles);
+            drawMirrors();
+            laser.draw(tiles);
             drawGun();
             drawObjects();
         }
@@ -121,11 +128,18 @@ var Board = (function() {
         }
     }
 
-    function drawImageTiles() {
+    function drawMirrors() {
         for (var x = 0; x < gridSize[0]; x++) {
             for (var y = 0; y < gridSize[1]; y++) {
-                if (tiles[x][y] !== 0) {
-                    drawImage("mirror" + tiles[x][y], x, y);
+                var name = "";
+                if (tiles[x][y][0] == mirrorStyle.NORMAL) {
+                    name = "mirror"
+                } else if (tiles[x][y][0] == mirrorStyle.TRIANGLE) {
+                    name = "triangle"
+                }
+
+                if (name != "") {
+                    drawImage(name + tiles[x][y][1], x, y);
                 }
             }
         }
@@ -139,14 +153,22 @@ var Board = (function() {
             w = tileSize[0],
             h = tileSize[1];
 
-        if (data["laserDirection"] == "up") {
+        if (data["laserDirection"] == "left") {
+            angle = 0;
+        } else if (data["laserDirection"] == "up-left") {
+            angle = 45;
+        } else if (data["laserDirection"] == "up") {
             angle = 90;
-        } else if (data["laserDirection"] == "down") {
-            angle = 270;
+        } else if (data["laserDirection"] == "up-right") {
+            angle = 135;
         } else if (data["laserDirection"] == "right") {
             angle = 180;
-        } else if (data["laserDirection"] == "left") {
-            angle = 0;
+        } else if (data["laserDirection"] == "down-right") {
+            angle = 225;
+        } else if (data["laserDirection"] == "down") {
+            angle = 270;
+        } else if (data["laserDirection"] == "down-left") {
+            angle = 315;
         }
 
         context.save();
@@ -216,19 +238,30 @@ var Board = (function() {
         var mirrors = 0;
         for (var x=0; x < gridSize[0]; x++) {
             for (var y=0; y < gridSize[1]; y++) {
-                if (tiles[x][y] != 0) {
+                if (tiles[x][y][0] == selectedMirrorStyle) {
                     mirrors++;
                 }
             }
         }
 
-        if (mirrors >= data["mirrorsCount"] && tiles[row][column] == 0) {
+        var name = "";
+        if (selectedMirrorStyle == mirrorStyle.NORMAL) {
+            name = "NORMAL";
+        } else if (selectedMirrorStyle == mirrorStyle.TRIANGLE) {
+            name = "TRIANGLE";
+        }
+
+        if (mirrors >= data["mirrorsCount"][name] && tiles[row][column][0] == mirrorStyle.NULL) {
             return;  // Limit mirrors
         }
 
-        tiles[row][column] = tiles[row][column] + 1;
-        if (tiles[row][column] === 5) {
-            tiles[row][column] = 0;
+        tiles[row][column][0] = selectedMirrorStyle;
+        tiles[row][column][1] = tiles[row][column][1] + 1;
+
+        if ((tiles[row][column][0] == mirrorStyle.NORMAL && tiles[row][column][1] >= 9) ||
+             tiles[row][column][0] == mirrorStyle.TRIANGLE && tiles[row][column][1] >= 5) {
+
+            tiles[row][column] = [mirrorStyle.NULL, 0];
         }
 
         laser.setTiles(tiles);
@@ -253,11 +286,18 @@ var Board = (function() {
         setLevel(level);  // Reset
     };
 
+    document.getElementById("mirrors-count-button").onclick = function() {
+        selectedMirrorStyle = mirrorStyle.NORMAL;
+    };
+
+    document.getElementById("triangles-count-button").onclick = function() {
+        selectedMirrorStyle = mirrorStyle.TRIANGLE;
+    };
+
     document.getElementById("clear-button").onclick = function() {
-        drawLaser = false;
         for (var x = 0; x < tiles.length; x++) {
             for (var y = 0; y < tiles[x].length; y++) {
-                tiles[x][y] = 0;
+                tiles[x][y] = [mirrorStyle.NULL, 0];
             }
         }
 
