@@ -66,6 +66,22 @@ var LevelsManager = (function() {
                 BOMBS: [],
                 WALLS: []
             }
+        },
+
+        TEST: {
+            canvasSize: [598, 448],
+            gridSize: [14, 10],
+            laserPosition: [3, 9],
+            laserDirection: "up-right",
+            mirrorsCount: {
+                NORMAL: 40,
+                CRISTAL: 40,
+            },
+            objects: {
+                LAMPS: [[10, 0], [9, 5], [8, 6]],
+                BOMBS: [],
+                WALLS: []
+            }
         }
     };
 

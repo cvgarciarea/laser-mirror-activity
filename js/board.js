@@ -326,8 +326,6 @@ var Board = (function() {
             if (overTile[1] + 1 < gridSize[1]) {
                 overTile[1] = overTile[1] + 1;
             }
-        } else {
-            console.log("KEY: " + event.keyCode);
         }
 
         draw();
@@ -390,7 +388,6 @@ var Board = (function() {
         showingDialog = false;
         setLevel(level);  // Reset
     };
-
 
     mirrorsButton.onclick = function() {
         selectMirrorStyle(mirrorStyle.NORMAL);
