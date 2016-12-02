@@ -36,6 +36,7 @@ var Laser = (function() {
     }
 
     var direction = dirType.UP,
+        previousDirection = dirType.UP,
         startDirection = dirType.UP,
         startPosition = [0, 0],
         currentPosition = [0, 0],
@@ -50,14 +51,15 @@ var Laser = (function() {
         lampsCount = -1,
         poweredLamps = [],
         levelComplete = false,
-        levelLosed = false;
+        levelLosed = false,
+        drawedPoints = [];  // [x, y, direction]
 
     var context = document.getElementById("board-canvas").getContext("2d");
 
     function draw() {
         direction = startDirection;
         poweredLamps = [];
-        //movements = getNextMovement(startDirection, startPosition[0], startPosition[1]);
+        drawedPoints = [];
 
         context.beginPath();
         context.strokeStyle = color;
@@ -66,7 +68,8 @@ var Laser = (function() {
 
         drawFirstLine();
 
-        while (true) {
+        loop = true;
+        while (loop) {
             if (currentPosition == [-3, -3]) {
                 break;
             }
@@ -75,6 +78,13 @@ var Laser = (function() {
                 y = currentPosition[1];
 
             getNextMovement(x, y);
+
+            for (var i=0; i < drawedPoints.length; i++) {
+                if (drawedPoints[i][0] == nextPosition[0] && drawedPoints[i][1] == nextPosition[1] && drawedPoints[i][2] == direction) {
+                    // Exiting before a infinite bucle
+                    loop = false;
+                }
+            }
 
             if (!inScreen(nextPosition[0], nextPosition[1])) {
                 break;
@@ -412,9 +422,8 @@ var Laser = (function() {
     }
 
     function drawLine(fx, fy, tx, ty) {
-        //movements[0][1] = tx;
-        //movements[0][2] = ty;
-
+        drawedPoints.push([fx, fy, previousDirection]);
+        previousDirection = direction;
         currentPosition = [tx, ty];
 
         var x1 = fx * tileSize[0] + tileSize[0] / 2,
@@ -437,6 +446,7 @@ var Laser = (function() {
         startPosition = _laserPosition;
         startDirection = translateDirection(_laserDirection);
         direction = startDirection,
+        previousDirection = direction;
         lampsCount = _lampsCount;
     }
 
