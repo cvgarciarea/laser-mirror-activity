@@ -1,4 +1,5 @@
 var Board = (function() {
+
     var mirrorStyle = {
         NULL: 0,
         NORMAL: 1,
@@ -19,11 +20,15 @@ var Board = (function() {
         showingDialog = false,
         selectedMirrorStyle = mirrorStyle.NORMAL;
 
-    var levelManager = LevelsManager;
-    var board = document.getElementById("board-canvas");
-    var context = board.getContext("2d");
-    var laser = Laser;
-    var utils = Utils;
+    var mirrorsButton = document.getElementById("mirrors-count-button"),
+        cristalsButton = document.getElementById("cristals-count-button"),
+        clearButton = document.getElementById("clear-button"),
+        board = document.getElementById("board-canvas"),
+        context = board.getContext("2d");
+
+    var levelManager = LevelsManager,
+        laser = Laser,
+        utils = Utils;
 
     function init() {
         loadLevelData();
@@ -52,12 +57,21 @@ var Board = (function() {
         }
 
         laser.setData(gridSize, tileSize, tiles, laserPosition, laserDirection, objects, objects["LAMPS"].length);
+
+        if (data.mirrorsCount.NORMAL != 0) {
+            selectMirrorStyle(mirrorStyle.NORMAL);
+        } else {
+            selectMirrorStyle(mirrorStyle.CRISTAL);
+        }
+
+        updateTooltipsData(data);
     }
 
     function nextLevel() {
         var index = levels.indexOf(level) + 1;
         if (index == levels.length) {
             level = levels[0];
+
         } else {
             level = levels[index];
         }
@@ -235,23 +249,16 @@ var Board = (function() {
             return;  // Evit make a mirror on gun place
         }
 
-        var mirrors = 0;
-        for (var x=0; x < gridSize[0]; x++) {
-            for (var y=0; y < gridSize[1]; y++) {
-                if (tiles[x][y][0] == selectedMirrorStyle) {
-                    mirrors++;
-                }
-            }
-        }
-
+        var mirrors = countMirrorsOnScreen(selectedMirrorStyle);
         var name = "";
+
         if (selectedMirrorStyle == mirrorStyle.NORMAL) {
             name = "NORMAL";
         } else if (selectedMirrorStyle == mirrorStyle.CRISTAL) {
             name = "CRISTAL";
         }
 
-        if (mirrors >= data["mirrorsCount"][name] && tiles[row][column][0] == mirrorStyle.NULL) {
+        if (mirrors >= data["mirrorsCount"][name] && tiles[row][column][0] != selectedMirrorStyle) {
             return;  // Limit mirrors
         }
 
@@ -264,9 +271,40 @@ var Board = (function() {
             tiles[row][column] = [mirrorStyle.NULL, 0];
         }
 
+        updateTooltipsData(data);
         laser.setTiles(tiles);
         draw();
     }, false);
+
+    function countMirrorsOnScreen(type) {
+        var mirrors = 0;
+        for (var x=0; x < gridSize[0]; x++) {
+            for (var y=0; y < gridSize[1]; y++) {
+                if (tiles[x][y][0] == type) {
+                    mirrors++;
+                }
+            }
+        }
+
+        return mirrors;
+    }
+
+    function updateTooltipsData(data) {
+        mirrorsButton.title = "Have left: " + (data.mirrorsCount.NORMAL - countMirrorsOnScreen(mirrorStyle.NORMAL));
+        cristalsButton.title = "Have left: " + (data.mirrorsCount.CRISTAL - countMirrorsOnScreen(mirrorStyle.CRISTAL));
+    }
+
+    function selectMirrorStyle(style) {
+        selectedMirrorStyle = style;
+
+        if (selectedMirrorStyle == mirrorStyle.NORMAL) {
+            mirrorsButton.style.backgroundColor = "#808080";
+            cristalsButton.style.backgroundColor = "";
+        } else if (selectedMirrorStyle == mirrorStyle.CRISTAL) {
+            cristalsButton.style.backgroundColor = "#808080";
+            mirrorsButton.style.backgroundColor = "";
+        }
+    }
 
     board.addEventListener("mousemove", function(event) {
         overTile[0] = parseInt(event.offsetX / tileSize[0]);
@@ -286,15 +324,16 @@ var Board = (function() {
         setLevel(level);  // Reset
     };
 
-    document.getElementById("mirrors-count-button").onclick = function() {
-        selectedMirrorStyle = mirrorStyle.NORMAL;
+
+    mirrorsButton.onclick = function() {
+        selectMirrorStyle(mirrorStyle.NORMAL);
     };
 
-    document.getElementById("cristals-count-button").onclick = function() {
-        selectedMirrorStyle = mirrorStyle.CRISTAL;
+    cristalsButton.onclick = function() {
+        selectMirrorStyle(mirrorStyle.CRISTAL);
     };
 
-    document.getElementById("clear-button").onclick = function() {
+    clearButton.onclick = function() {
         for (var x = 0; x < tiles.length; x++) {
             for (var y = 0; y < tiles[x].length; y++) {
                 tiles[x][y] = [mirrorStyle.NULL, 0];
