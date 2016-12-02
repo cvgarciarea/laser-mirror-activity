@@ -2,7 +2,7 @@ var Board = (function() {
     var mirrorStyle = {
         NULL: 0,
         NORMAL: 1,
-        TRIANGLE: 2
+        CRISTAL: 2
     }
 
     var gridSize = [-1, -1],
@@ -134,8 +134,8 @@ var Board = (function() {
                 var name = "";
                 if (tiles[x][y][0] == mirrorStyle.NORMAL) {
                     name = "mirror"
-                } else if (tiles[x][y][0] == mirrorStyle.TRIANGLE) {
-                    name = "triangle"
+                } else if (tiles[x][y][0] == mirrorStyle.CRISTAL) {
+                    name = "cristal"
                 }
 
                 if (name != "") {
@@ -247,8 +247,8 @@ var Board = (function() {
         var name = "";
         if (selectedMirrorStyle == mirrorStyle.NORMAL) {
             name = "NORMAL";
-        } else if (selectedMirrorStyle == mirrorStyle.TRIANGLE) {
-            name = "TRIANGLE";
+        } else if (selectedMirrorStyle == mirrorStyle.CRISTAL) {
+            name = "CRISTAL";
         }
 
         if (mirrors >= data["mirrorsCount"][name] && tiles[row][column][0] == mirrorStyle.NULL) {
@@ -259,7 +259,7 @@ var Board = (function() {
         tiles[row][column][1] = tiles[row][column][1] + 1;
 
         if ((tiles[row][column][0] == mirrorStyle.NORMAL && tiles[row][column][1] >= 9) ||
-             tiles[row][column][0] == mirrorStyle.TRIANGLE && tiles[row][column][1] >= 5) {
+             tiles[row][column][0] == mirrorStyle.CRISTAL && tiles[row][column][1] >= 5) {
 
             tiles[row][column] = [mirrorStyle.NULL, 0];
         }
@@ -290,8 +290,8 @@ var Board = (function() {
         selectedMirrorStyle = mirrorStyle.NORMAL;
     };
 
-    document.getElementById("triangles-count-button").onclick = function() {
-        selectedMirrorStyle = mirrorStyle.TRIANGLE;
+    document.getElementById("cristals-count-button").onclick = function() {
+        selectedMirrorStyle = mirrorStyle.CRISTAL;
     };
 
     document.getElementById("clear-button").onclick = function() {

@@ -7,7 +7,7 @@ var LevelsManager = (function() {
             laserDirection: "up",
             mirrorsCount: {
                 NORMAL: 1,
-                TRIANGLE: 0
+                CRISTAL: 0
             },
             objects: {
                 LAMPS: [[13, 4]],
@@ -23,7 +23,7 @@ var LevelsManager = (function() {
             laserDirection: "left",
             mirrorsCount: {
                 NORMAL: 3,
-                TRIANGLE: 0
+                CRISTAL: 0
             },
             objects: {
                 LAMPS: [[10, 0]],
@@ -43,7 +43,7 @@ var LevelsManager = (function() {
             laserDirection: "up",
             mirrorsCount: {
                 NORMAL: 3,
-                TRIANGLE: 0
+                CRISTAL: 0
             },
             objects: {
                 LAMPS: [[7, 2], [6, 3], [8, 3], [0, 4], [7, 4]],
@@ -59,12 +59,12 @@ var LevelsManager = (function() {
             laserDirection: "up-right",
             mirrorsCount: {
                 NORMAL: 0,
-                TRIANGLE: 3
+                CRISTAL: 3
             },
             objects: {
-                LAMPS: [[2, 0], [10, 0], [8, 2], [5, 3], [9, 5], [8, 6], [11, 9], [13, 9]],
+                LAMPS: [[10, 0], [9, 5], [8, 6]],
                 BOMBS: [],
-                WALLS: [[7, 4]]
+                WALLS: []
             }
         }
     };
