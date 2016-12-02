@@ -11,6 +11,10 @@
   background-image: url(../img/clear-board.svg);
 }
 
+#mirrors-count-button {
+  background-image: url(../img/mirror1.png);
+}
+
 #prev-bt {
   background-image: url(../icons/go-previous-paired.svg);
 }
