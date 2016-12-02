@@ -1,5 +1,14 @@
 var Board = (function() {
 
+    var key = {
+        CTRL: 17,
+        SPACE: 32,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40
+    }
+
     var mirrorStyle = {
         NULL: 0,
         NORMAL: 1,
@@ -14,7 +23,7 @@ var Board = (function() {
         level = "FIRST",
         levels = ["FIRST", "SECOND", "THIRD", "FOURTH"],
         levelData = {},
-        overTile = [],
+        overTile = [0, 0],
         tiles = [],
         objects = {},
         showingDialog = false,
@@ -23,6 +32,8 @@ var Board = (function() {
     var mirrorsButton = document.getElementById("mirrors-count-button"),
         cristalsButton = document.getElementById("cristals-count-button"),
         clearButton = document.getElementById("clear-button"),
+        completeButton = document.getElementById("complete-button"),
+        retryButton = document.getElementById("retry-button"),
         board = document.getElementById("board-canvas"),
         context = board.getContext("2d");
 
@@ -236,7 +247,7 @@ var Board = (function() {
         context.drawImage(img, tileSize[0] * x, tileSize[1] * y, tileSize[0], tileSize[1]);
     }
 
-    board.addEventListener("click", function(event) {
+    function actionOnOverTile() {
         var data = levelManager.getLevelData(level);
         var row = overTile[0],
             column = overTile[1];
@@ -262,6 +273,7 @@ var Board = (function() {
             return;  // Limit mirrors
         }
 
+        updateTooltipsData(data);
         tiles[row][column][0] = selectedMirrorStyle;
         tiles[row][column][1] = tiles[row][column][1] + 1;
 
@@ -274,7 +286,52 @@ var Board = (function() {
         updateTooltipsData(data);
         laser.setTiles(tiles);
         draw();
+    }
+
+    board.addEventListener("click", function(event) {
+        actionOnOverTile();
     }, false);
+
+    document.onkeydown = function checkKey(event) {
+        event = event || window.event;
+
+        if (event.keyCode == key.CTRL) {
+            selectNextMirrorStyle();
+
+        } else if (event.keyCode == key.SPACE) {
+            if (laser.checkLevelComplete()) {
+                completeButton.onclick();
+            } else if (laser.checkLevelLosed()) {
+                retryButton.onclick();
+            } else {
+                actionOnOverTile();
+            }
+
+        } else if (event.keyCode == key.LEFT) {
+            if (overTile[0] - 1 > -1) {
+                overTile[0] = overTile[0] - 1;
+            }
+        
+        } else if (event.keyCode == key.UP) {
+            if (overTile[1] - 1 > -1) {
+                overTile[1] = overTile[1] - 1;
+            }
+        
+        } else if (event.keyCode == key.RIGHT) {
+            if (overTile[0] + 1 < gridSize[0]) {
+                overTile[0] = overTile[0] + 1;
+            }
+        
+        } else if (event.keyCode == key.DOWN) {
+            if (overTile[1] + 1 < gridSize[1]) {
+                overTile[1] = overTile[1] + 1;
+            }
+        } else {
+            console.log("KEY: " + event.keyCode);
+        }
+
+        draw();
+    }
 
     function countMirrorsOnScreen(type) {
         var mirrors = 0;
@@ -306,19 +363,29 @@ var Board = (function() {
         }
     }
 
+    function selectNextMirrorStyle() {
+        var styles = [mirrorStyle.NORMAL, mirrorStyle.CRISTAL];
+
+        if (styles.indexOf(selectedMirrorStyle) == styles.length - 1) {
+            selectMirrorStyle(styles[0]);
+        } else {
+            selectMirrorStyle(styles[styles.indexOf(selectedMirrorStyle) + 1]);
+        }
+    }
+
     board.addEventListener("mousemove", function(event) {
         overTile[0] = parseInt(event.offsetX / tileSize[0]);
         overTile[1] = parseInt(event.offsetY / tileSize[1]);
         draw();
     }, false);
 
-    document.getElementById("complete-button").onclick = function() {
+    completeButton.onclick = function() {
         this.parentNode.style.display = "none";
         showingDialog = false;
         nextLevel();
     };
 
-    document.getElementById("retry-button").onclick = function() {
+    retryButton.onclick = function() {
         this.parentNode.style.display = "none";
         showingDialog = false;
         setLevel(level);  // Reset
